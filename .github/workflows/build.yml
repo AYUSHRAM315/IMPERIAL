@@ -1,8 +1,9 @@
-name: Build Android APK
+name: Build Private Android APK
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -26,39 +27,22 @@ jobs:
 
       - name: Sync Capacitor Android
         run: |
+          npx cap add android || true
           npx cap sync android
 
-      - name: Setup Java JDK
+      - name: Setup Java JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Install Android SDK
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y unzip curl
-          mkdir -p /tmp/android-sdk/cmdline-tools
-          curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-latest.zip -o /tmp/cmdline-tools.zip
-          unzip -q /tmp/cmdline-tools.zip -d /tmp/android-sdk/cmdline-tools
-          mv /tmp/android-sdk/cmdline-tools/cmdline-tools /tmp/android-sdk/cmdline-tools/latest
-          chmod -R +x /tmp/android-sdk/cmdline-tools/latest/bin
-          echo "ANDROID_SDK_ROOT=/tmp/android-sdk" >> $GITHUB_ENV
-          echo "ANDROID_HOME=/tmp/android-sdk" >> $GITHUB_ENV
-          echo "/tmp/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-          echo "/tmp/android-sdk/platform-tools" >> $GITHUB_PATH
-          yes | /tmp/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/tmp/android-sdk --licenses
-          yes | /tmp/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=/tmp/android-sdk "platform-tools" "platforms;android-36" "build-tools;36.0.0"
-
-      - name: Fix Gradle Permissions
-        run: |
-          sudo apt-get install -y dos2unix
-          dos2unix android/gradlew
-          chmod +x android/gradlew
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
 
       - name: Build Android APK
         run: |
           cd android
+          chmod +x gradlew
           ./gradlew assembleDebug
 
       - name: Upload APK Artifact
