@@ -44,10 +44,12 @@ jobs:
           curl -sSL https://dl.google.com/android/repository/commandlinetools-linux-109.0.0_latest.zip -o /tmp/cmdline-tools.zip
           unzip -q /tmp/cmdline-tools.zip -d /tmp/android-sdk/cmdline-tools
           mv /tmp/android-sdk/cmdline-tools/cmdline-tools /tmp/android-sdk/cmdline-tools/latest
+          chmod -R +x /tmp/android-sdk/cmdline-tools/latest/bin
           export ANDROID_SDK_ROOT=/tmp/android-sdk
+          export ANDROID_HOME=/tmp/android-sdk
           export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools:$PATH
-          yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses
-          yes | sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          /tmp/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} --licenses || true
+          yes | /tmp/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
       - name: Fix Line Endings and Permissions
         run: |
