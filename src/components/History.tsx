@@ -1,9 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useLocale } from '@/context/LocaleContext';
-import { supabase, type AnalysisRow } from '@/lib/supabase';
 import { History as HistoryIcon, Trash2, ChevronRight, Sparkles } from 'lucide-react';
 import type { AnalysisResult } from '@/numerology/analyzer';
 import AnalyzerResult from './AnalyzerResult';
+
+// Local storage key for saved analyses
+const STORAGE_KEY = 'analyses';
+
+export type AnalysisRow = {
+  id: string;
+  mobile: string;
+  dob: string | null;
+  mobile_total: number;
+  result: AnalysisResult;
+  label: string | null;
+  created_at: string;
+};
 
 const tierBadge: Record<string, { label: string; cls: string }> = {
   best: { label: 'Favorable', cls: 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30' },
@@ -19,19 +31,24 @@ export default function History() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('analyses')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && data) setRows(data as unknown as AnalysisRow[]);
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? (JSON.parse(raw) as AnalysisRow[]) : [];
+      // sort by created_at desc
+      parsed.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+      setRows(parsed);
+    } catch (e) {
+      setRows([]);
+    }
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
 
   const remove = async (id: string) => {
-    await supabase.from('analyses').delete().eq('id', id);
-    setRows((r) => r.filter((x) => x.id !== id));
+    const next = rows.filter((x) => x.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setRows(next);
   };
 
   if (selected) {

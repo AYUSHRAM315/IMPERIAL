@@ -1,27 +1,18 @@
 import { useState } from 'react';
-import { AuthProvider, useAuth } from '@/context/AuthContext';
 import { LocaleProvider, useLocale } from '@/context/LocaleContext';
-import AuthPage from '@/components/AuthPage';
 import Analyzer from '@/components/Analyzer';
 import History from '@/components/History';
-import { Sparkles, Wand2, History as HistoryIcon, LogOut, Loader2 } from 'lucide-react';
+import { Sparkles, Wand2, History as HistoryIcon } from 'lucide-react';
 
 type View = 'analyzer' | 'history';
 
 function Shell() {
-  const { user, loading, signOut } = useAuth();
   const { locale, setLocale, t } = useLocale();
   const [view, setView] = useState<View>('analyzer');
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-7 h-7 text-gold-400 animate-spin" />
-      </div>
-    );
-  }
 
-  if (!user) return <AuthPage />;
+  
+  // Removed auth checks and AuthPage rendering
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -51,13 +42,7 @@ function Shell() {
             >
               <HistoryIcon className="w-4 h-4" /> <span className="hidden sm:inline">{t('historyTab')}</span>
             </button>
-            <button
-              onClick={signOut}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-cream-200/70 hover:text-rose-300 transition"
-              title={t('signOutTitle')}
-            >
-              <LogOut className="w-4 h-4" /> <span className="hidden sm:inline">{t('signOutTitle')}</span>
-            </button>
+            {/* sign out removed - app no longer requires authentication */}
             <select
               value={locale}
               onChange={(e) => setLocale(e.target.value as 'en' | 'hi')}
@@ -85,9 +70,7 @@ function Shell() {
 export default function App() {
   return (
     <LocaleProvider>
-      <AuthProvider>
-        <Shell />
-      </AuthProvider>
+      <Shell />
     </LocaleProvider>
   );
 }

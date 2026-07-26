@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import { useLocale } from '@/context/LocaleContext';
 import type { AnalysisResult, CoupleReading } from '@/numerology/analyzer';
-import { Sparkles, Star, Shield, AlertTriangle, Flame, Crown, Save, Check } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { Sparkles, Star, Shield, AlertTriangle, Flame, Crown } from 'lucide-react';
 import RemedyEngine from '@/components/RemedyEngine';
 
 const tierClass: Record<string, string> = {
@@ -76,28 +76,36 @@ function CoupleCard({ cr, index }: { cr: CoupleReading; index: number }) {
 }
 
 export default function AnalyzerResult({ result, mobile, dob }: { result: AnalysisResult; mobile: string; dob: string | null }) {
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [label, setLabel] = useState('');
-  const [showSave, setShowSave] = useState(false);
-
+  const { t } = useLocale();
   const reversedCouples = [...result.coupleReadings].reverse();
 
-  const save = async () => {
-    setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { setSaving(false); return; }
-    const { error } = await supabase.from('analyses').insert({
-      mobile,
-      dob: dob || null,
-      mobile_total: result.mobileTotal,
-      result: result as unknown as Record<string, unknown>,
-      label: label.trim() || null,
-    });
-    setSaving(false);
-    if (!error) { setSaved(true); setShowSave(false); }
-  };
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
+  const saveLocal = async () => {
+    setSaving(true);
+    try {
+      const STORAGE_KEY = 'analyses';
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const existing = raw ? JSON.parse(raw) : [];
+      const id = typeof crypto !== 'undefined' && (crypto as any).randomUUID ? (crypto as any).randomUUID() : Math.random().toString(36).slice(2, 10);
+      const row = {
+        id,
+        mobile: mobile || '',
+        dob: dob ?? null,
+        mobile_total: result.mobileTotal ?? result.mobileTotal ?? 0,
+        result,
+        label: null,
+        created_at: new Date().toISOString(),
+      } as const;
+      existing.unshift(row);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Summary hero */}
@@ -116,29 +124,12 @@ export default function AnalyzerResult({ result, mobile, dob }: { result: Analys
             <p className="mt-2 text-sm text-cream-200/70 break-all">{result.digits}</p>
           </div>
           <div className="flex gap-2">
-            {saved ? (
-              <span className="lux-btn-ghost text-emerald-300 border-emerald-400/30"><Check className="w-4 h-4" /> Saved</span>
-            ) : (
-              <button onClick={() => setShowSave((s) => !s)} className="lux-btn-ghost">
-                <Save className="w-4 h-4" /> Save Reading
-              </button>
-            )}
-          </div>
-        </div>
-
-        {showSave && !saved && (
-          <div className="mt-4 flex flex-col sm:flex-row gap-2 animate-fade-up">
-            <input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="Label (e.g. Work number)"
-              className="lux-input flex-1"
-            />
-            <button onClick={save} disabled={saving} className="lux-btn">
-              {saving ? 'Saving…' : 'Confirm Save'}
+            <button onClick={saveLocal} disabled={saving} className="lux-btn">
+              {saving ? 'Saving...' : (saved ? 'Saved' : t('saveReading') || 'Save')}
             </button>
           </div>
-        )}
+        </div>
+        
 
         {result.gateway && (
           <div className={`mt-4 p-4 rounded-xl bg-espresso-950/40 ${tierClass[result.gateway.tier]}`}>
