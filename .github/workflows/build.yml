@@ -20,10 +20,10 @@ jobs:
           node-version: 22
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Build Web App
-        run: npm install --legacy-peer-deps
+        run: npm run build
 
       - name: Sync Capacitor Assets
         run: |
