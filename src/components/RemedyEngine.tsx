@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { reduceDigits } from '@/numerology/analyzer';
 import type { AnalysisResult } from '@/numerology/analyzer';
 import { useLocale } from '@/context/LocaleContext';
 import { PROBLEM_OPTIONS, suggestRemedies, type LifeProblem, type RemedySuggestion } from '@/numerology/remedy';
@@ -82,21 +83,56 @@ export default function RemedyEngine({ result }: { result: AnalysisResult }) {
             <h4 className="font-display text-lg text-cream-50">{t('recommendedCombos')}</h4>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
-            {remedies.map((r, i) => (
-              <div
-                key={i}
-                className="group relative p-4 rounded-xl bg-gradient-to-br from-espresso-900/80 to-espresso-950/80 border border-gold-500/25 hover:border-gold-400/50 transition-all duration-300 animate-fade-up"
-                style={{ animationDelay: `${i * 80}ms` }}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="font-display text-3xl font-semibold text-gold-300 tracking-wider">
-                    {r.combo}
-                  </span>
-                  <ArrowRight className="w-4 h-4 text-cream-200/40 group-hover:text-gold-300 group-hover:translate-x-1 transition-all" />
+            {remedies.map((r, i) => {
+              const comboTotal = reduceDigits(Number(r.combo));
+              const compatibility = result.rootInfo
+                ? result.rootInfo.lucky.includes(comboTotal)
+                  ? 'favorable'
+                  : result.rootInfo.bad.includes(comboTotal)
+                  ? 'caution'
+                  : 'neutral'
+                : null;
+              const compatibilityLabel = compatibility ? t(compatibility) : t('comboCompatibilityUnknown');
+              const compatibilityClass = compatibility === 'favorable'
+                ? 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30'
+                : compatibility === 'caution'
+                  ? 'bg-rose-400/15 text-rose-300 border-rose-400/30'
+                  : 'bg-gold-400/15 text-gold-300 border-gold-400/30';
+
+              return (
+                <div
+                  key={i}
+                  className="group relative p-4 rounded-xl bg-gradient-to-br from-espresso-900/80 to-espresso-950/80 border border-gold-500/25 hover:border-gold-400/50 transition-all duration-300 animate-fade-up"
+                  style={{ animationDelay: `${i * 80}ms` }}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-display text-3xl font-semibold text-gold-300 tracking-wider">
+                      {r.combo}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-cream-200/40 group-hover:text-gold-300 group-hover:translate-x-1 transition-all" />
+                  </div>
+                  <p className="mt-3 text-xs uppercase tracking-[0.2em] text-cream-200/50">
+                    {t('remedyComboSummary')}
+                  </p>
+                  <div className="mt-2 grid gap-2 text-sm text-cream-200/80">
+                    <div className="flex items-center justify-between rounded-xl bg-espresso-950/50 px-3 py-2">
+                      <span>{t('comboTotalLabel')}</span>
+                      <span className="font-medium text-cream-100">{comboTotal}</span>
+                    </div>
+                    <div className="flex items-center justify-between rounded-xl bg-espresso-950/50 px-3 py-2">
+                      <span>{t('comboCompatibilityLabel')}</span>
+                      <span className={`text-[11px] uppercase tracking-[0.18em] rounded-full px-2 py-1 ${compatibilityClass}`}>
+                        {compatibilityLabel}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-xl bg-espresso-950/40 p-3">
+                    <p className="text-xs uppercase tracking-[0.2em] text-cream-200/50">{t('comboBenefitLabel')}</p>
+                    <p className="mt-2 text-sm text-cream-200/80 leading-relaxed">{r.reason}</p>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm text-cream-200/80 leading-relaxed">{t('remedyComboSummary')}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
           <p className="mt-4 text-xs text-cream-200/50 italic">
             {t('guidanceNote')}
