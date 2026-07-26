@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { getStoredItem, setStoredItem } from '@/utils/storage';
 import { translations } from '@/i18n';
 
 type Locale = 'en' | 'hi';
@@ -8,7 +9,7 @@ type TranslationKey = keyof typeof translations.en;
 type LocaleContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: TranslationKey, params?: Record<string, string | number>) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 };
 
 const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
@@ -17,21 +18,22 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>('en');
 
   useEffect(() => {
-    const stored = localStorage.getItem('locale');
+    const stored = getStoredItem('locale');
     if (stored === 'hi' || stored === 'en') {
       setLocale(stored);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('locale', locale);
+    setStoredItem('locale', locale);
   }, [locale]);
 
   const value = useMemo<LocaleContextValue>(() => ({
     locale,
     setLocale,
     t(key, params) {
-      let text = translations[locale][key] ?? translations.en[key] ?? key;
+      const localeMap = translations[locale] as Record<string, string>;
+      let text = localeMap[key] ?? translations.en[key as TranslationKey] ?? key;
       if (params) {
         Object.entries(params).forEach(([paramKey, paramValue]) => {
           text = text.replace(`{${paramKey}}`, String(paramValue));

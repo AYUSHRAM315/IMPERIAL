@@ -3,6 +3,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { History as HistoryIcon, Trash2, ChevronRight, Sparkles } from 'lucide-react';
 import type { AnalysisResult } from '@/numerology/analyzer';
 import AnalyzerResult from './AnalyzerResult';
+import { getStoredJson, removeStoredItem, setStoredJson } from '@/utils/storage';
 
 // Local storage key for saved analyses
 const STORAGE_KEY = 'analyses';
@@ -17,10 +18,15 @@ export type AnalysisRow = {
   created_at: string;
 };
 
-const tierBadge: Record<string, { label: string; cls: string }> = {
-  best: { label: 'Favorable', cls: 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30' },
-  neutral: { label: 'Neutral', cls: 'bg-gold-400/15 text-gold-300 border-gold-400/30' },
-  bad: { label: 'Caution', cls: 'bg-rose-400/15 text-rose-300 border-rose-400/30' },
+const tierBadgeClasses: Record<string, string> = {
+  best: 'bg-emerald-400/15 text-emerald-300 border-emerald-400/30',
+  neutral: 'bg-gold-400/15 text-gold-300 border-gold-400/30',
+  bad: 'bg-rose-400/15 text-rose-300 border-rose-400/30',
+};
+const tierLabelKey: Record<string, string> = {
+  best: 'favorable',
+  neutral: 'neutral',
+  bad: 'caution',
 };
 
 export default function History() {
@@ -32,12 +38,10 @@ export default function History() {
   const load = async () => {
     setLoading(true);
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? (JSON.parse(raw) as AnalysisRow[]) : [];
-      // sort by created_at desc
+      const parsed = getStoredJson<AnalysisRow[]>(STORAGE_KEY) ?? [];
       parsed.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
       setRows(parsed);
-    } catch (e) {
+    } catch {
       setRows([]);
     }
     setLoading(false);
@@ -47,7 +51,7 @@ export default function History() {
 
   const remove = async (id: string) => {
     const next = rows.filter((x) => x.id !== id);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setStoredJson(STORAGE_KEY, next);
     setRows(next);
   };
 
@@ -56,10 +60,10 @@ export default function History() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-5">
           <h2 className="font-display text-2xl text-cream-50">
-            {selected.label || `Reading for ${selected.mobile}`}
+            {selected.label || t('readingFor', { mobile: selected.mobile })}
           </h2>
           <button onClick={() => setSelected(null)} className="lux-btn-ghost text-sm">
-            <ChevronRight className="w-4 h-4 rotate-180" /> Back
+            <ChevronRight className="w-4 h-4 rotate-180" /> {t('back')}
           </button>
         </div>
         <AnalyzerResult result={selected.result as unknown as AnalysisResult} mobile={selected.mobile} dob={selected.dob} />
@@ -71,9 +75,8 @@ export default function History() {
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="flex items-center gap-2 mb-6">
         <HistoryIcon className="w-5 h-5 text-gold-300" />
-        <h2 className="font-display text-3xl text-cream-50">Saved Readings</h2>
+        <h2 className="font-display text-3xl text-cream-50">{t('savedReadings')}</h2>
       </div>
-
       {loading ? (
         <p className="text-cream-200/60">{t('loading')}</p>
       ) : rows.length === 0 ? (
@@ -92,11 +95,11 @@ export default function History() {
                   {r.mobile_total}
                 </div>
                 <button onClick={() => setSelected(r)} className="flex-1 text-left min-w-0">
-                  <p className="text-cream-50 font-medium truncate">{r.label || `Mobile ${r.mobile}`}</p>
+                  <p className="text-cream-50 font-medium truncate">{r.label || t('mobileReadingLabel', { mobile: r.mobile })}</p>
                   <p className="text-xs text-cream-200/50 truncate">{new Date(r.created_at).toLocaleString()}</p>
                 </button>
-                <span className={`text-xs px-2.5 py-1 rounded-full border ${tierBadge[tier].cls} hidden sm:inline`}>
-                  {tierBadge[tier].label}
+                <span className={`text-xs px-2.5 py-1 rounded-full border ${tierBadgeClasses[tier]} hidden sm:inline`}>
+                  {t(tierLabelKey[tier])}
                 </span>
                 <button onClick={() => remove(r.id)} className="p-2 rounded-lg text-cream-200/50 hover:text-rose-300 hover:bg-rose-500/10 transition">
                   <Trash2 className="w-4 h-4" />

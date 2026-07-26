@@ -2,11 +2,22 @@ import { PAIR_MAP, TRIPLE_MAP, gatewayLookup, ROOT, type Entry, type GatewayTier
 
 export type WeightTag = 'top' | 'high' | 'mid' | 'low';
 
+export type WeightLabelKey =
+  | 'masterGateway'
+  | 'masterGatewayStrongest'
+  | 'personalZoneStrong'
+  | 'personalZone'
+  | 'networkPrefixLow';
+
 export type CoupleReading = {
   couple: string;
-  weightLabel: string;
+  weightLabel: WeightLabelKey;
   weightTag: WeightTag;
   data: Entry | null;
+};
+
+export type AnalysisError = {
+  error: 'invalidMobile' | 'oddDigitCount';
 };
 
 export type RunAlert = {
@@ -51,19 +62,19 @@ export function reduceDigits(n: number): number {
   return x;
 }
 
-function weightFor(i: number, total: number): { label: string; tag: WeightTag } {
-  if (total <= 2) return { label: 'Master Gateway', tag: 'top' };
+function weightFor(i: number, total: number): { label: WeightLabelKey; tag: WeightTag } {
+  if (total <= 2) return { label: 'masterGateway', tag: 'top' };
   const fromEnd = total - i;
-  if (fromEnd === 1) return { label: 'Master Gateway — Strongest', tag: 'top' };
-  if (fromEnd === 2) return { label: 'Personal Zone — Strong', tag: 'high' };
-  if (fromEnd === 3) return { label: 'Personal Zone', tag: 'mid' };
-  return { label: 'Network Prefix — Low Influence', tag: 'low' };
+  if (fromEnd === 1) return { label: 'masterGatewayStrongest', tag: 'top' };
+  if (fromEnd === 2) return { label: 'personalZoneStrong', tag: 'high' };
+  if (fromEnd === 3) return { label: 'personalZone', tag: 'mid' };
+  return { label: 'networkPrefixLow', tag: 'low' };
 }
 
-export function analyzeNumber(mobileRaw: string, dob: string | null): AnalysisResult | { error: string } {
+export function analyzeNumber(mobileRaw: string, dob: string | null): AnalysisResult | AnalysisError {
   const digits = mobileRaw.replace(/\D/g, '');
-  if (digits.length < 4) return { error: 'Enter a valid mobile number (digits only).' };
-  if (digits.length % 2 !== 0) return { error: 'The number of digits must be even to form clean couples — recheck the number entered.' };
+  if (digits.length < 4) return { error: 'invalidMobile' };
+  if (digits.length % 2 !== 0) return { error: 'oddDigitCount' };
 
   const couples: string[] = [];
   for (let i = 0; i < digits.length; i += 2) {

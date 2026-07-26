@@ -22,7 +22,7 @@ function Shell() {
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gold-400 to-mocha-500 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-espresso-950" />
             </div>
-            <span className="font-display text-2xl font-semibold text-cream-50 tracking-[0.15em]">IMPERIAL</span>
+            <span className="font-display text-2xl font-semibold text-cream-50 tracking-[0.15em]">{t('imperial')}</span>
           </div>
 
           <nav className="flex items-center gap-2">
@@ -61,7 +61,7 @@ function Shell() {
       </main>
 
       <footer className="border-t border-gold-500/10 py-5 text-center text-xs text-cream-200/40">
-        IMPERIAL — a luxury numerology experience. Readings are for reflection and entertainment.
+        {t('footerText')}
       </footer>
     </div>
   );

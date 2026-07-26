@@ -15,7 +15,11 @@ export default function Analyzer() {
     e.preventDefault();
     setError(null);
     const res = analyzeNumber(mobile, dob || null);
-    if ('error' in res) { setError(res.error); setResult(null); return; }
+    if ('error' in res) {
+      setError(t(res.error));
+      setResult(null);
+      return;
+    }
     setResult(res);
   };
 
@@ -35,22 +39,24 @@ export default function Analyzer() {
       {!result ? (
         <form onSubmit={run} className="lux-card p-6 sm:p-8 animate-fade-up space-y-5">
           <div>
-            <label className="block text-sm text-cream-200/70 mb-2">Mobile Number</label>
+            <label className="block text-sm text-cream-200/70 mb-2">{t('mobileNumber')}</label>
             <div className="relative">
               <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gold-400/70" />
               <input
                 inputMode="numeric"
                 value={mobile}
                 onChange={(e) => setMobile(e.target.value.replace(/[^\d]/g, ''))}
-                placeholder="e.g. 9876543210"
+                placeholder={t('mobileExample')}
                 className="lux-input pl-11 font-display text-lg tracking-wider"
               />
             </div>
-            <p className="mt-1.5 text-xs text-cream-200/40">Digits only. Must contain an even number of digits.</p>
+            <p className="mt-1.5 text-xs text-cream-200/40">{t('mobileHint')}</p>
           </div>
 
           <div>
-            <label className="block text-sm text-cream-200/70 mb-2">Date of Birth <span className="text-cream-200/40">(optional, for root-number match)</span></label>
+            <label className="block text-sm text-cream-200/70 mb-2">
+              {t('dob')} <span className="text-cream-200/40">{t('dobHint')}</span>
+            </label>
             <div className="relative">
               <CalendarDays className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gold-400/70" />
               <input

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { AnalysisResult } from '@/numerology/analyzer';
+import { useLocale } from '@/context/LocaleContext';
 import { PROBLEM_OPTIONS, suggestRemedies, type LifeProblem, type RemedySuggestion } from '@/numerology/remedy';
 import { Sparkles, Wand2, Coins, HeartPulse, Heart, Briefcase, BrainCircuit, ArrowRight } from 'lucide-react';
 
@@ -11,7 +12,16 @@ const problemIcon: Record<LifeProblem, typeof Coins> = {
   peace: BrainCircuit,
 };
 
+const problemLabelKey: Record<LifeProblem, string> = {
+  money: 'problemMoney',
+  health: 'problemHealth',
+  relationships: 'problemRelationships',
+  career: 'problemCareer',
+  peace: 'problemPeace',
+};
+
 export default function RemedyEngine({ result }: { result: AnalysisResult }) {
+  const { t } = useLocale();
   const [problem, setProblem] = useState<LifeProblem | null>(null);
   const [remedies, setRemedies] = useState<RemedySuggestion[]>([]);
   const [generating, setGenerating] = useState(false);
@@ -29,11 +39,10 @@ export default function RemedyEngine({ result }: { result: AnalysisResult }) {
     <div className="lux-card p-6 animate-fade-up border-gold-400/30">
       <div className="flex items-center gap-2 mb-1">
         <Wand2 className="w-5 h-5 text-gold-300" />
-        <h3 className="font-display text-2xl text-cream-50">AI Remedy Engine</h3>
+        <h3 className="font-display text-2xl text-cream-50">{t('aiRemedy')}</h3>
       </div>
       <p className="text-sm text-cream-200/70 mb-5">
-        What specific issue or goal are you facing right now? Pick one and the engine
-        will calculate ideal number combinations that counteract the negative influences in your current number.
+        {t('remedyDescription')}
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
@@ -52,7 +61,7 @@ export default function RemedyEngine({ result }: { result: AnalysisResult }) {
             >
               <Icon className={`w-5 h-5 transition-colors ${active ? 'text-gold-300' : 'text-cream-200/60 group-hover:text-gold-300/80'}`} />
               <span className={`text-xs font-medium text-center leading-tight ${active ? 'text-cream-50' : 'text-cream-200/80'}`}>
-                {opt.label}
+                {t(problemLabelKey[opt.id])}
               </span>
             </button>
           );
@@ -62,7 +71,7 @@ export default function RemedyEngine({ result }: { result: AnalysisResult }) {
       {generating && (
         <div className="mt-6 flex items-center gap-3 text-cream-200/70 animate-fade-up">
           <div className="w-4 h-4 rounded-full border-2 border-gold-300/40 border-t-gold-300 animate-spin" />
-          <span className="text-sm">Calculating remedy combinations against your current number…</span>
+          <span className="text-sm">{t('calculating')}</span>
         </div>
       )}
 
@@ -70,7 +79,7 @@ export default function RemedyEngine({ result }: { result: AnalysisResult }) {
         <div className="mt-6 animate-fade-up">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-gold-300" />
-            <h4 className="font-display text-lg text-cream-50">Recommended Number Combinations</h4>
+            <h4 className="font-display text-lg text-cream-50">{t('recommendedCombos')}</h4>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
             {remedies.map((r, i) => (
@@ -85,13 +94,12 @@ export default function RemedyEngine({ result }: { result: AnalysisResult }) {
                   </span>
                   <ArrowRight className="w-4 h-4 text-cream-200/40 group-hover:text-gold-300 group-hover:translate-x-1 transition-all" />
                 </div>
-                <p className="mt-2 text-sm text-cream-200/80 leading-relaxed">{r.reason}</p>
+                <p className="mt-2 text-sm text-cream-200/80 leading-relaxed">{t('remedyComboSummary')}</p>
               </div>
             ))}
           </div>
           <p className="mt-4 text-xs text-cream-200/50 italic">
-            These combinations are calculated to counter the negative influences detected in your current number.
-            Use them as guidance for choosing a new number — not as a guarantee.
+            {t('guidanceNote')}
           </p>
         </div>
       )}
